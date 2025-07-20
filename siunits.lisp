@@ -3,10 +3,12 @@
 ;17/07 aggiunte fz is-base-si-unit, is-si-unit, si-unit-name, si-unit-symbol
 ;si-unit-base-expansion, make-unit-prefixes e vari defparameter. Occhio
 ;nelle varie defparameter le unita' dovrebbero essere tutte |simboli|
+;19/07 create fz check-prefixed-si-unit e affini SISTEMO VAL RITORNO.
 ;DA SISTEMARE MULTIPLI DEI KILOGRAMMI
 
 ;in Common Lisp la forma canonica `e una lista con operatore * e con
 ;operandi delle unit`a o delle espressioni del tipo (expt U E).
+
 
 
 ; Definizione unità SI
@@ -40,41 +42,47 @@
 ;  (mapcar (lambda (x) (intern (string-upcase (symbol-name x)) :siunits))
 ;          '(kg m s A K mol cd)))
 
-(defparameter base-si-units '(kg m s A K cd mol))
+(defparameter base-si-units '(|kg| |m| |s| |A| |K| |cd| |mol|))
 
 ;lista di cons-cell simbolo-nome per tutte le unita base e derivate.
 (defparameter units-symbol-name
-  '((kg . kilogram)
-    (m . metre)
-    (s . second)
-    (A . Ampere)
-    (K . Kelvin)
-    (cd . candela)
-    (mol . mole)
-    (Bq . Becquerel)
-    (DC . degreecelsius)
-    (C . Coulomb)
-    (F . Farad)
-    (Gy . Gray)
-    (Hz . Hertz)
-    (H . Henry)
-    (J . Joule)
-    (kat . Katal)
-    (lm . lumen)
-    (lx. lux)
-    (N . Newton)
-    (omega . Ohm)
-    (Pa . Pascal)
-    (rad . radian)
-    (S . Siemens)
-    (Sv . Sievert)
-    (sr . steradian)
-    (T . Tesla)
-    (V . Volt)
-    (W . Watt)
-    (Wb . Weber)
+  '((|kg| . kilogram)
+    (|m| . metre)
+    (|s| . second)
+    (|A| . Ampere)
+    (|K| . Kelvin)
+    (|cd| . candela)
+    (|mol| . mole)
+    (|Bq| . Becquerel)
+    (|DC| . degreecelsius)
+    (|C| . Coulomb)
+    (|F| . Farad)
+    (|Gy| . Gray)
+    (|Hz| . Hertz)
+    (|H| . Henry)
+    (|J| . Joule)
+    (|kat| . Katal)
+    (|lm| . lumen)
+    (|lx|. lux)
+    (|N| . Newton)
+    (|omega| .Ohm)
+    (|Pa| . Pascal)
+    (|rad| . radian)
+    (|S| . Siemens)
+    (|Sv| . Sievert)
+    (|sr| . steradian)
+    (|T| . Tesla)
+    (|V| . Volt)
+    (|W| . Watt)
+    (|Wb| . Weber)
     )
   )
+
+;lista di tutte le unita si come stringhe (i simboli) in minuscolo
+;con kg.
+
+(defparameter units-symbol-string-withkg
+  (mapcar 'string-downcase (mapcar 'string (mapcar 'car units-symbol-name))))
 
 ;lista di coppie simbolo prefisso - valore
 ;NB il simbolo di micro e' uguale al suo nome
@@ -104,9 +112,8 @@
    (|r| . (expt 10 -27))
    (|q| . (expt 10 -30))))
 
-;lista contenente tutti i possibili multipli di metro come simboli
-(defparameter metro-prefixes
-  (make-unit-prefixes 'metre))
+
+
 
 ;data una unita' SI per nome, restituisce la lista con tutti i
 ;possibili multipli di quell'unita' come simboli.
@@ -114,17 +121,23 @@
 (defun make-unit-prefixes (unit)
   (mapcar 'make-symbol
 	  (mapcar
-	   (lambda (x)(concatenate 'string x (string (si-unit-symbol unit))))
+	   (lambda (x)(concatenate 'string x
+				   (string-downcase
+				    (string (si-unit-symbol unit)))))
 	   (mapcar 'string (mapcar 'car si-prefixes)))))
 
 ;ritorna T se il suo argomento e' un simbolo (la sigla) delle unita' di base
 ;non e' case sensitive (ovviamente) e non accetta i multipli delle unita'
+;da wikipedia: "The grouping formed by a prefix symbol attached to a unit symbol
+;(e.g. 'km', 'cm') constitutes a new inseparable unit symbol."
+;allora i multipli non sono unita' di base. 
 (defun is-base-si-unit (unit)
   (not
    (null (find unit base-si-units))))
 
 ;ritorna T se il suo argomento e' un simbolo che denota una unita SI base o
-;derivata. Non accetta i multipli delle unita'.
+;derivata. Non accetta i multipli delle unita', solo unita' si base e
+;derivate.
 
 (defun is-si-unit (unit)
   (or
@@ -137,8 +150,8 @@
 (defun si-unit-name (unit &optional (i 0))
   (cond
    ((null (nth i units-symbol-name)) NIL)
-   ((equal unit
-	   (car (nth i units-symbol-name)))
+   ((equal (string unit)
+	   (string(car (nth i units-symbol-name))))
     (cdr (nth i units-symbol-name)))
    (T (si-unit-name unit (+ i 1)))))
 
@@ -153,6 +166,47 @@
     (car (nth i units-symbol-name)))
    (T (si-unit-symbol unit (+ i 1))))
   )
+
+;ritorna T se dim e' una dimensione, ovvero un simbolo di unita' base o derivat
+;a oppure una lista con operatore * e operandi unita' o espressioni
+;(expt u e)
+
+;(defun is-dimension (dim)
+;  (cond ((is-si-unit dim) t)
+;	(and (listp dim)
+;	     (equal * (first dim))
+;	     ())))
+
+;ritorna T se dim e' un unita' SI (multiplo o non) o se e' una espressione
+;del tipo (expt u e) con u unita' si (multiplo o non) ed e numero
+
+;(defun is-unit-operand (operand)
+;  ())
+
+;ritorna l'unita con prefisso se l'argomento e' un unita' con prefisso
+;altrimenti NIL.
+;prima e' saggio verificare che l'argomento sia un simbolo si senza prefisso.
+
+(defun check-prefixed-si-unit (dim)
+	;ottieni la lista di tutti i simboli di unita SI che compaiono in dim
+	;per ciascuno di questi simboli, vedi se riesci a trovare dim uguale a
+	;uno dei suoi prefissi, se lo trovi, allora dim e' un unita con prefix
+  (first (remove-if 'null (mapcar (lambda (x)
+				   (find-if (lambda (y) (equal y (string dim)))
+					    (mapcar 'string (make-unit-prefixes
+					     (si-unit-name (make-symbol x))))))
+		 (find-units-list (string dim))))))
+
+;ritorna una lista contenente tutti i simboli unita si senza prefissi
+;che compaiono nella stringa argomento
+;nb al posto di kg cerca g
+(defun find-units-list (dim)
+  (remove-if (lambda (x) (null(search x dim)))
+	     ;sostituisci kg con g
+	     (substitute-if "g" (lambda (x) (equal x "kg"))
+			     (mapcar 'string-downcase
+				     (mapcar 'string
+					 (mapcar 'car units-symbol-name))))))
 
 ; Normalizzazione delle dimensioni
 
