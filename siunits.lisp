@@ -255,3 +255,35 @@
     (if (same-dim-p d1 d2)
         (list (- v1 v2) (normalize d1))
         (error "Dimensioni incompatibili in qsub"))))
+
+
+
+(defun qmul (q1 q2)
+  "Moltiplica due quantità, sommando le dimensioni."
+  (let ((v1 (first q1))
+        (d1 (second q1))
+        (v2 (first q2))
+        (d2 (second q2)))
+    (list (* v1 v2)
+          (normalize (append d1 d2)))))
+
+(defun qdiv (q1 q2)
+  "Divide due quantità, sottraendo le dimensioni."
+  (let ((v1 (first q1))
+        (d1 (second q1))
+        (v2 (first q2))
+        (d2 (second q2)))
+    (list (/ v1 v2)
+          (normalize (append d1
+                             (mapcar (lambda (x)
+                                       (cons (car x) (- (cdr x))))
+                                     d2))))))
+
+(defun qexp (q n)
+  "Eleva una quantità a potenza intera n."
+  (let ((v (first q))
+        (d (second q)))
+    (list (expt v n)
+          (normalize (mapcar (lambda (x)
+                               (cons (car x) (* n (cdr x))))
+                             d)))))
