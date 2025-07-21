@@ -249,7 +249,7 @@
 ; Operazioni tra quantità
 
 (defun q (N D)
-  "Costruttore di quantità: restituisce (Q N D'), dove D' è la dimensione normalizzata."
+  "Costruttore di quantità: restituisce (Q N D') con dimensione normalizzata."
   (list 'Q N (normalize D)))
 
 (defun same-dim-p (dim1 dim2)
@@ -279,8 +279,6 @@
     (if (same-dim-p d1 d2)
         (list (- v1 v2) (normalize d1))
         (error "Dimensioni incompatibili in qsub"))))
-
-
 
 (defun qmul (q1 q2)
   "Moltiplica due quantità, sommando le dimensioni."
