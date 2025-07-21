@@ -248,6 +248,10 @@
 
 ; Operazioni tra quantità
 
+(defun q (N D)
+  "Costruttore di quantità: restituisce (Q N D'), dove D' è la dimensione normalizzata."
+  (list 'Q N (normalize D)))
+
 (defun same-dim-p (dim1 dim2)
   "Controlla se due dimensioni sono equivalenti dopo normalizzazione."
   (equal (normalize dim1) (normalize dim2)))
