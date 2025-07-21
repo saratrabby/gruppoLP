@@ -1,5 +1,6 @@
 ;;;; 899988 Alari Matteo
 ;;;; 909567 Caronni Andrea
+;;;; 914295 Trabattoni Sara
 ;17/07 aggiunte fz is-base-si-unit, is-si-unit, si-unit-name, si-unit-symbol
 ;si-unit-base-expansion, make-unit-prefixes e vari defparameter. Occhio
 ;nelle varie defparameter le unita' dovrebbero essere tutte |simboli|
@@ -166,6 +167,25 @@
     (car (nth i units-symbol-name)))
    (T (si-unit-symbol unit (+ i 1))))
   )
+
+;Confronta due unità, restituendo come result uno dei simboli <, >, o =.
+(defun compare-units (u1 u2)
+  (labels ((strip-prefix (unit)
+            (let ((unit-str (string-downcase (string unit))))
+              (loop for (prefix . val) in si-prefixes
+                    for prefix-str = (string-downcase (string prefix))
+                    when (and (>= (length unit-str) (length prefix-str))
+                              (string= prefix-str (subseq unit-str 0 (length prefix-str))))
+                    do (return (intern (subseq unit-str (length prefix-str)) :siunits))
+                    finally (return unit)))))
+    (let* ((base-u1 (strip-prefix u1))
+           (base-u2 (strip-prefix u2))
+           (idx1 (position base-u1 (mapcar 'car units-symbol-name)))
+           (idx2 (position base-u2 (mapcar 'car units-symbol-name))))
+      (cond
+        ((= idx1 idx2) '=)
+        ((< idx1 idx2) '<)
+        (t '>)))))
 
 ;ritorna T se dim e' una dimensione, ovvero un simbolo di unita' base o derivat
 ;a oppure una lista con operatore * e operandi unita' o espressioni
