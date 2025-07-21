@@ -168,6 +168,42 @@
    (T (si-unit-symbol unit (+ i 1))))
   )
 
+;ritorna l'espansione canonica dell'unità S (anche con multipli) in termini di
+;unità base. Se S è già un'unità base, restituisce una lista.
+(defun si-unit-base-expansion (S)
+  (labels ((strip-prefix (unit)
+            (let ((unit-str (string-downcase (string unit))))
+              (loop for (prefix . val) in si-prefixes
+                    for prefix-str = (string-downcase (string prefix))
+                    when (and (>= (length unit-str) (length prefix-str))
+                              (string= prefix-str (subseq unit-str 0 (length prefix-str))))
+                    do (return (intern (subseq unit-str (length prefix-str)) :siunits))
+                    finally (return unit)))))
+    (let* ((base-unit (strip-prefix S))
+           (def (cdr (assoc base-unit *si-unit-defs*))))
+      (cond
+        ((null def)
+         (if (is-base-si-unit base-unit)
+             (list (cons base-unit 1)) 
+             (error "Unità non riconosciuta: ~A" S)))
+        ((symbolp def) (si-unit-base-expansion def)) 
+        ((and (listp def) (eq (car def) '*))
+         (normalize
+          (apply #'append
+                 (mapcar (lambda (term)
+                           (cond
+                             ((and (listp term) (eq (car term) 'expt))
+                              (let ((u (cadr term))
+                                    (e (caddr term)))
+                                (mapcar (lambda (x)
+                                          (cons (car x) (* (cdr x) e)))
+                                        (si-unit-base-expansion u))))
+                             ((symbolp term)
+                              (si-unit-base-expansion term))
+                             (t nil)))
+                         (cdr def)))))
+        (t (error "Forma non gestita per l'unità: ~A" S))))))
+
 ;Confronta due unità, restituendo come result uno dei simboli <, >, o =.
 (defun compare-units (u1 u2)
   (labels ((strip-prefix (unit)
