@@ -1,4 +1,5 @@
 %%%% 899988 Alari Matteo
+%%%% 914295 Trabattoni Sara
 
 % Unità base SI
 si_base_unit(m).     % metro
@@ -21,6 +22,65 @@ is_si_unit(U1 * U2) :-
 is_si_unit(U ** E) :-
     is_si_unit(U),
     integer(E).
+
+% Prefissi SI (nome, simbolo, fattore)
+si_prefix(chilo, k, 1e3).
+si_prefix(etto, h, 1e2).
+si_prefix(deca, da, 1e1).
+si_prefix(deci, d, 1e-1).
+si_prefix(centi, c, 1e-2).
+si_prefix(milli, m, 1e-3).
+si_prefix(micro, 'μ', 1e-6).
+si_prefix(nano, n, 1e-9).
+si_prefix(pico, p, 1e-12).
+
+% Unità base SI
+si_unit_symbol(metro, m).
+si_unit_symbol(chilogrammo, kg).
+si_unit_symbol(secondo, s).
+si_unit_symbol(ampere, 'A').
+si_unit_symbol(kelvin, 'K').
+si_unit_symbol(mole, mol).
+si_unit_symbol(candela, cd).
+
+% Unità con prefisso: si_unit_symbol(NomeUnità, Simbolo)
+si_unit_symbol(NomePrefisso-NomeUnita, SimboloPrefissoSimboloUnita) :-
+    si_prefix(NomePrefisso, SimboloPrefisso, _),
+    si_unit_symbol(NomeUnita, SimboloUnita),
+    atom_concat(SimboloPrefisso, SimboloUnita, SimboloPrefissoSimboloUnita).
+
+% Operazione inversa a quella precedente
+si_unit_name(S, N) :-
+    si_unit_symbol(N, S).
+si_unit_name(S, Prefisso-NomeUnita) :-
+    si_prefix(Prefisso, SimboloPrefisso, _),
+    si_unit_symbol(NomeUnita, SimboloUnita),
+    atom_concat(SimboloPrefisso, SimboloUnita, S).
+
+% Result è < se U1 < U2, > se U1 > U2, = se U1 = U2 (in termini di grandezza)
+compare_units(Result, U1, U2) :-
+    unit_factor(U1, F1, Base1),
+    unit_factor(U2, F2, Base2),
+    Base1 = Base2, % devono essere la stessa unità base
+    ( F1 < F2 -> Result = '<'
+    ; F1 > F2 -> Result = '>'
+    ; F1 =:= F2 -> Result = '='
+    ).
+
+% Calcola il fattore numerico associato all'unità (considerando il prefisso)
+unit_factor(U, 1, U) :-
+    si_unit_symbol(_, U). % unità senza prefisso
+unit_factor(Prefisso-Nome, Fattore, Base) :-
+    si_prefix(Prefisso, _, F),
+    si_unit_symbol(Nome, Base),
+    Fattore = F.
+unit_factor(U, F, Base) :-
+    atom(U),
+    atom_chars(U, [First|_]),
+    si_prefix(Prefisso, SimboloPrefisso, F),
+    atom_chars(SimboloPrefisso, [First|_]),
+    si_unit_symbol(Nome, Base),
+    atom_concat(SimboloPrefisso, Base, U).
 
 % Espansione canonica in unità base
 si_unit_base_expansion(U, U) :-
@@ -114,3 +174,4 @@ expand_power(U1 * U2, N, D1 * D2) :-
     expand_power(U2, N, D2).
 expand_power(U, N, U ** N) :-
     atom(U).
+
