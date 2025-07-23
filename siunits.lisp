@@ -66,7 +66,7 @@
     (|lm| . lumen)
     (|lx|. lux)
     (|N| . Newton)
-    (|omega| .Ohm)
+    (|omega| . Ohm)
     (|Pa| . Pascal)
     (|rad| . radian)
     (|S| . Siemens)
@@ -123,8 +123,16 @@
   (mapcar 'make-symbol
 	  (mapcar
 	   (lambda (x)(concatenate 'string x
-				   (string-downcase
-				    (string (si-unit-symbol unit)))))
+				    (string (si-unit-symbol unit))))
+	   (mapcar 'string (mapcar 'car si-prefixes)))))
+
+;dato un simbolo, restituisce la lista con tutti i prefissi applicati al
+;simbolo. Da usare con g (grammo).
+(defun make-symbol-prefixes (symb)
+    (mapcar 'make-symbol
+	  (mapcar
+	   (lambda (x)(concatenate 'string x
+				    (string symb)))
 	   (mapcar 'string (mapcar 'car si-prefixes)))))
 
 ;ritorna T se il suo argomento e' un simbolo (la sigla) delle unita' di base
@@ -227,31 +235,70 @@
 ;a oppure una lista con operatore * e operandi unita' o espressioni
 ;(expt u e)
 
-;(defun is-dimension (dim)
-;  (cond ((is-si-unit dim) t)
-;	(and (listp dim)
-;	     (equal * (first dim))
-;	     ())))
+(defun is-dimension (dim)
+  (cond ((and (not (listp dim))(not (null (decompose-si-unit dim))) t))
+	((and (listp dim)) (equal (first dim) '*)
+	 ;REST ROVINA LA CASE SENSITIVITY
+	 (reduce 'and (mapcar 'is-unit-operand
+			      (mapcar (lambda (x) (make-symbol (string dim))))
+			      (rest dim)))))))
 
 ;ritorna T se dim e' un unita' SI (multiplo o non) o se e' una espressione
-;del tipo (expt u e) con u unita' si (multiplo o non) ed e numero
+;del tipo (expt u e) con u unita' si (multiplo o non) ed e
 
-;(defun is-unit-operand (operand)
-;  ())
+(defun is-unit-operand (operand)
+  (cond ((not (null (decompose-si-unit operand))) t)
+	((listp operand) (and (equal (first operand) 'expt)
+			     (not (null (decompose-si-unit (second operand))))
+			     (numberp (third operand))))))
 
-;ritorna l'unita con prefisso se l'argomento e' un unita' con prefisso
+;restituisce l'unita' se l argomento e' un unita' base e derivata senza prefisso
+;se ha il prefisso restituisce ('unitabase expt 10 val)
+
+(defun decompose-si-unit (dim)
+  (cond ((equal dim '|kg|) dim)
+	((is-si-unit dim) dim)
+	((not (null dim)) (cons (make-symbol (check-prefixed-si-unit dim))
+		 (rest (car
+		  (decompose-prefixed-si-unit dim
+					     (check-prefixed-si-unit dim))))))))
+
+;restituisce simbolo pref e potenza di dieci dato argomento unita' con prefisso
+;e unita' corrispondente senza prefisso es. cm m, microomega omega
+;NB decompone kg in g * 10 exp 3
+
+(defun decompose-prefixed-si-unit (prefixed base)
+  (remove-if-not (lambda (x)
+	       ;cerca il prefisso
+		   (and (not (null x))
+			(equal (string (car x))
+		      (subseq (string prefixed) 0
+			      (min (length (string prefixed))
+				   (length (string (car x))))))
+	       ;assicurati che dopo il prefisso ci sia l'unita'
+		    (equal (string base)
+			   (subseq
+			    (string prefixed)
+			    (min (length (string prefixed))
+				  (length (string (car x))))))))
+	     si-prefixes))
+
+;ritorna l'unita senza prefisso se l'argomento e' un unita' con prefisso
 ;altrimenti NIL.
 ;prima e' saggio verificare che l'argomento sia un simbolo si senza prefisso.
+;NB se l'argomento e' kg restituisce g.
 
 (defun check-prefixed-si-unit (dim)
-	;ottieni la lista di tutti i simboli di unita SI che compaiono in dim
-	;per ciascuno di questi simboli, vedi se riesci a trovare dim uguale a
-	;uno dei suoi prefissi, se lo trovi, allora dim e' un unita con prefix
-  (first (remove-if 'null (mapcar (lambda (x)
-				   (find-if (lambda (y) (equal y (string dim)))
-					    (mapcar 'string (make-unit-prefixes
-					     (si-unit-name (make-symbol x))))))
-		 (find-units-list (string dim))))))
+  (first (remove-if
+	  (lambda (x)
+	    (null (find-if
+		   (lambda (y) (equal y (string dim)))
+		   (mapcar 'string (if (equal x "g")
+				      (make-symbol-prefixes (make-symbol x))
+				      (make-unit-prefixes
+				       (si-unit-name
+					(make-symbol x))))))))
+	   (find-units-list (string dim)))))
 
 ;ritorna una lista contenente tutti i simboli unita si senza prefissi
 ;che compaiono nella stringa argomento
@@ -260,9 +307,8 @@
   (remove-if (lambda (x) (null(search x dim)))
 	     ;sostituisci kg con g
 	     (substitute-if "g" (lambda (x) (equal x "kg"))
-			     (mapcar 'string-downcase
-				     (mapcar 'string
-					 (mapcar 'car units-symbol-name))))))
+			    (mapcar 'string
+				    (mapcar 'car units-symbol-name)))))
 
 ; Normalizzazione delle dimensioni
 
