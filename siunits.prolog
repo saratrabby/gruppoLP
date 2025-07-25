@@ -143,11 +143,33 @@ unit_factor(U, F, Base) :-
     atom_concat(SimboloPrefisso, Base, U).
 
 % Espansione canonica in unità base
-si_unit_base_expansion(U, U) :-
-    si_base_unit(U).
-si_unit_base_expansion(U, Base) :-
-    si_derived_unit(U, D),
-    norm(D, Base).
+si_unit_base_expansion(U, Exp) :-
+    % Caso unità base SI
+    si_base_unit(U), !,
+    Exp = U.
+si_unit_base_expansion(U, Exp) :-
+    % Caso unità derivata SI
+    si_derived_unit(U, D), !,
+    norm(D, Exp).
+si_unit_base_expansion(Prefisso-U, Exp) :-
+    % Caso unità con prefisso (es. centi-metro)
+    si_prefix(Prefisso, _, Fattore),
+    si_unit_base_expansion(U, BaseExp),
+    Exp = BaseExp * Fattore.
+si_unit_base_expansion(U ** E, Exp) :-
+    % Caso potenza
+    si_unit_base_expansion(U, BaseExp),
+    Exp = BaseExp ** E.
+si_unit_base_expansion(U, Exp) :-
+    % Caso simbolo con prefisso (es. cm, mg)
+    atom(U),
+    atom_chars(U, [First|_]),
+    si_prefix(Prefisso, SimboloPrefisso, Fattore),
+    atom_chars(SimboloPrefisso, [First|_]),
+    si_unit_symbol(NomeUnita, BaseSimbolo),
+    atom_concat(SimboloPrefisso, BaseSimbolo, U),
+    si_unit_base_expansion(NomeUnita, BaseExp),
+    Exp = BaseExp * Fattore.
 
 % Dimensione valida
 is_dimension(Dim) :-
@@ -169,36 +191,69 @@ dim_to_list(U1 * U2, List) :-
     dim_to_list(U1, L1),
     dim_to_list(U2, L2),
     append(L1, L2, List).
+dim_to_list(U, [(Base, E, Fattore)]) :-
+    atom(U),
+    decompose_prefixed_unit(U, _, Base, Fattore),
+    E = 1, !.
+dim_to_list(U ** E, [(Base, E, Fattore)]) :-
+    atom(U),
+    decompose_prefixed_unit(U, _, Base, Fattore), !.
+dim_to_list(U ** E, [(U, E, 1)]) :- !.
+dim_to_list(U, [(U, 1, 1)]) :-
+    si_base_unit(U), !.
+dim_to_list(U, List) :-
+    si_derived_unit(U, D),
+    dim_to_list(D, List), !.
+dim_to_list(U1 * U2, List) :-
+    dim_to_list(U1, L1),
+    dim_to_list(U2, L2),
+    append(L1, L2, List).
 
 % Somma esponenti per unità duplicate
 merge_units(Units, Merged) :-
     merge_units_(Units, [], Merged).
 
 merge_units_([], Acc, Acc).
-merge_units_([(U, E)|T], Acc, Result) :-
-    ( select((U, E0), Acc, Rest) ->
+merge_units_([(U, E, F)|T], Acc, Result) :-
+    ( select((U, E0, F0), Acc, Rest) ->
         E1 is E + E0,
-        merge_units_(T, [(U, E1)|Rest], Result)
+        F1 is F * F0,
+        merge_units_(T, [(U, E1, F1)|Rest], Result)
     ;
-        merge_units_(T, [(U, E)|Acc], Result)
+        merge_units_(T, [(U, E, F)|Acc], Result)
     ).
+
+% decompose_prefixed_unit(Simbolo, Prefisso, BaseUnita, Fattore)
+decompose_prefixed_unit(Simbolo, Prefisso, BaseUnita, Fattore) :-
+    atom(Simbolo),
+    si_prefix(Prefisso, SimboloPrefisso, Fattore),
+    si_unit_symbol(BaseUnita, BaseSimbolo),
+    atom_concat(SimboloPrefisso, BaseSimbolo, Simbolo).
+% check_prefixed_unit(Simbolo, BaseUnita)
+check_prefixed_unit(Simbolo, BaseUnita) :-
+    decompose_prefixed_unit(Simbolo, _, BaseUnita, _).
 
 % Ricostruzione lista 
 list_to_dim([], 1).
-list_to_dim([(U, 1)], U) :- !.
-list_to_dim([(U, E)], U ** E) :- !.
-list_to_dim([(U, 1)|T], U * D) :-
+list_to_dim([(U, E, F)], U ** E * F) :- !.
+list_to_dim([(U, 1, F)|T], U * F * D) :-
     list_to_dim(T, D).
-list_to_dim([(U, E)|T], U ** E * D) :-
+list_to_dim([(U, E, F)|T], U ** E * F * D) :-
     list_to_dim(T, D).
 
 % Normalizza una dimensione: somma esponenti, 
 % elimina esponenti nulli, associa a sinistra
 norm(Dim, NewDim) :-
-    dim_to_list(Dim, List),         
-    merge_units(List, Merged),      
-    exclude_zero_exponents(Merged, Cleaned), 
-    list_to_dim(Cleaned, NewDim).   
+    dim_to_list(Dim, List),
+    merge_units(List, Merged),
+    exclude_zero_exponents(Merged, Cleaned),
+    list_to_dim(Cleaned, NewDim).
+
+exclude_zero_exponents([], []).
+exclude_zero_exponents([(U, E, F)|T], R) :-
+    (E =:= 0 -> exclude_zero_exponents(T, R)
+    ; R = [(U, E, F)|Rest], exclude_zero_exponents(T, Rest)
+    ).
 
 % Elimina unità con esponente zero
 exclude_zero_exponents([], []).
@@ -208,10 +263,9 @@ exclude_zero_exponents([(U, E)|T], R) :-
     ).
 
 % Somma tra quantità (solo se dimensioni compatibili)
-qadd(q(V1, D1), q(V2, D2), q(V3, D1)) :-
-    norm(D1, N1),
-    norm(D2, N2),
-    N1 = N2,
+qadd(q(V1, D1), q(V2, D2), q(V3, Dbase)) :-
+    norm(D1, Dbase),
+    norm(D2, Dbase),
     V3 is V1 + V2.
 
 % Sottrazione tra quantità
@@ -241,6 +295,12 @@ qexp(q(V, D), N, q(VR, DR)) :-
     norm(Dexp, DR).
 
 % Espansione di potenza su espressioni
+expand_power(Prefisso-U, N, Exp) :-
+    % Caso unità con prefisso (es. centi-metro)
+    si_prefix(Prefisso, _, Fattore),
+    expand_power(U, N, BaseExp),
+    FattorePot is Fattore ** N,
+    Exp = BaseExp * FattorePot.
 expand_power(U ** E, N, U ** E1) :-
     E1 is E * N.
 expand_power(U1 * U2, N, D1 * D2) :-
@@ -248,4 +308,10 @@ expand_power(U1 * U2, N, D1 * D2) :-
     expand_power(U2, N, D2).
 expand_power(U, N, U ** N) :-
     atom(U).
-
+% Espansione di potenza su simboli con prefisso (es. cm, mg)
+expand_power(U, N, Exp) :-
+    atom(U),
+    decompose_prefixed_unit(U, Prefisso, BaseUnita, Fattore),
+    expand_power(BaseUnita, N, BaseExp),
+    FattorePot is Fattore ** N,
+    Exp = BaseExp * FattorePot.
