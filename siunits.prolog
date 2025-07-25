@@ -23,6 +23,30 @@ is_si_unit(U ** E) :-
     is_si_unit(U),
     integer(E).
 
+% Unità derivate SI: si_derived_unit(Simbolo, Espressione)
+si_derived_unit(N, kg * m / s ** 2).         % Newton
+si_derived_unit(J, kg * m ** 2 / s ** 2).    % Joule
+si_derived_unit(Pa, kg / (m * s ** 2)).      % Pascal
+si_derived_unit(W, kg * m ** 2 / s ** 3).    % Watt
+si_derived_unit(Hz, 1 / s).                  % Hertz
+si_derived_unit(C, s * 'A').                 % Coulomb
+si_derived_unit(V, kg * m ** 2 / (s ** 3 * 'A')). % Volt
+si_derived_unit(F, s ** 4 * 'A' ** 2 / (kg * m ** 2)). % Farad
+si_derived_unit(Ohm, kg * m ** 2 / (s ** 3 * 'A' ** 2)). % Ohm
+si_derived_unit(S, s ** 3 * 'A' ** 2 / (kg * m ** 2)). % Siemens
+si_derived_unit(Wb, kg * m ** 2 / (s ** 2 * 'A')). % Weber
+si_derived_unit(T, kg / (s ** 2 * 'A')).     % Tesla
+si_derived_unit(H, kg * m ** 2 / (s ** 2 * 'A' ** 2)). % Henry
+si_derived_unit(lm, cd).                     % Lumen (semplificato)
+si_derived_unit(lx, cd / m ** 2).            % Lux (semplificato)
+si_derived_unit(Bq, 1 / s).                  % Becquerel
+si_derived_unit(Gy, m ** 2 / s ** 2).        % Gray
+si_derived_unit(Sv, m ** 2 / s ** 2).        % Sievert
+si_derived_unit(kat, mol / s).               % Katal 
+
+% Unità non SI ma usata per i multipli
+grammo_base(kg).
+
 % Prefissi SI (nome, simbolo, fattore)
 si_prefix(chilo, k, 1e3).
 si_prefix(etto, h, 1e2).
@@ -42,12 +66,28 @@ si_unit_symbol(ampere, 'A').
 si_unit_symbol(kelvin, 'K').
 si_unit_symbol(mole, mol).
 si_unit_symbol(candela, cd).
+si_unit_symbol(grammo, g).
+si_unit_symbol(milligrammo, mg).
+si_unit_symbol(microgrammo, 'μg').
 
 % Unità con prefisso: si_unit_symbol(NomeUnità, Simbolo)
 si_unit_symbol(NomePrefisso-NomeUnita, SimboloPrefissoSimboloUnita) :-
     si_prefix(NomePrefisso, SimboloPrefisso, _),
     si_unit_symbol(NomeUnita, SimboloUnita),
     atom_concat(SimboloPrefisso, SimboloUnita, SimboloPrefissoSimboloUnita).
+
+% Gestione dei multipli di grammo
+si_unit_symbol(Prefisso-grammo, Simbolo) :-
+    si_prefix(Prefisso, SimboloPrefisso, _),
+    atom_concat(SimboloPrefisso, 'g', Simbolo).
+
+% Conversione da multiplo di grammo a kg
+grammo_to_kg(ValueG, ValueKg) :-
+    ValueKg is ValueG / 1000.
+
+% Conversione da kg a multiplo di grammo
+kg_to_grammo(ValueKg, ValueG) :-
+    ValueG is ValueKg * 1000.
 
 % Operazione inversa a quella precedente
 si_unit_name(S, N) :-
