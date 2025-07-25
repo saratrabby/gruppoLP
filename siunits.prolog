@@ -233,6 +233,33 @@ decompose_prefixed_unit(Simbolo, Prefisso, BaseUnita, Fattore) :-
 check_prefixed_unit(Simbolo, BaseUnita) :-
     decompose_prefixed_unit(Simbolo, _, BaseUnita, _).
 
+% expt_base_unit(Unita, Esponente, Base, FattoreTotale)
+expt_base_unit(U, E, Base, FattoreTotale) :-
+    decompose_prefixed_unit(U, _, Base, Fattore),
+    FattoreTotale is Fattore ** E.
+expt_base_unit(U, E, U, 1) :-
+    si_base_unit(U).
+
+% sum_base_units(ListaUnità, ListaSemplificata)
+sum_base_units(List, Result) :-
+    sum_base_units_(List, [], Result).
+sum_base_units_([], Acc, Acc).
+sum_base_units_([(U, E, F)|T], Acc, Result) :-
+    ( select((U, E0, F0), Acc, Rest) ->
+        E1 is E + E0,
+        F1 is F * F0,
+        sum_base_units_(T, [(U, E1, F1)|Rest], Result)
+    ;
+        sum_base_units_(T, [(U, E, F)|Acc], Result)
+    ).
+    
+% simplify_base_units_list(Lista, ListaSemplificata)
+simplify_base_units_list([], []).
+simplify_base_units_list([(U, E, F)|T], R) :-
+    (E =:= 0 -> simplify_base_units_list(T, R)
+    ; R = [(U, E, F)|Rest], simplify_base_units_list(T, Rest)
+    ).
+
 % Ricostruzione lista 
 list_to_dim([], 1).
 list_to_dim([(U, E, F)], U ** E * F) :- !.
@@ -262,18 +289,40 @@ exclude_zero_exponents([(U, E)|T], R) :-
     ; R = [(U, E)|Rest], exclude_zero_exponents(T, Rest)
     ).
 
+extract_factor(Dim, F) :-
+    dim_to_list(Dim, List),
+    extract_factor_list(List, F).
+
+extract_factor_list([], 1).
+extract_factor_list([(_, _, F1)|T], F) :-
+    extract_factor_list(T, FRest),
+    F is F1 * FRest.
+
 % Somma tra quantità (solo se dimensioni compatibili)
 qadd(q(V1, D1), q(V2, D2), q(V3, Dbase)) :-
-    norm(D1, Dbase),
-    norm(D2, Dbase),
-    V3 is V1 + V2.
+    norm(D1, ND1),
+    norm(D2, ND2),
+    ND1 = ND2, % dimensioni compatibili
+    extract_factor(D1, F1),
+    extract_factor(D2, F2),
+    extract_factor(ND1, Fbase),
+    V1base is V1 * F1 / Fbase,
+    V2base is V2 * F2 / Fbase,
+    V3 is V1base + V2base,
+    Dbase = ND1.
 
 % Sottrazione tra quantità
-qsub(q(V1, D1), q(V2, D2), q(V3, D1)) :-
-    norm(D1, N1),
-    norm(D2, N2),
-    N1 = N2,
-    V3 is V1 - V2.
+qsub(q(V1, D1), q(V2, D2), q(V3, Dbase)) :-
+    norm(D1, ND1),
+    norm(D2, ND2),
+    ND1 = ND2,
+    extract_factor(D1, F1),
+    extract_factor(D2, F2),
+    extract_factor(ND1, Fbase),
+    V1base is V1 * F1 / Fbase,
+    V2base is V2 * F2 / Fbase,
+    V3 is V1base - V2base,
+    Dbase = ND1.
 
 % Moltiplicazione tra quantità
 qmul(q(V1, D1), q(V2, D2), q(V3, D3)) :-
@@ -315,3 +364,9 @@ expand_power(U, N, Exp) :-
     expand_power(BaseUnita, N, BaseExp),
     FattorePot is Fattore ** N,
     Exp = BaseExp * FattorePot.
+
+% true se le due dimensioni sono equivalenti dopo normalizzazione
+same_dim(D1, D2) :-
+    norm(D1, ND1),
+    norm(D2, ND2),
+    ND1 = ND2.
