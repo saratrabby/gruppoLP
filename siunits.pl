@@ -406,3 +406,17 @@ same_dim(D1, D2) :-
     norm(D2, ND2),
     ND1 = ND2.
 
+% Unità derivate espresse in unità base SI
+si_unit_def('N', kg * m ** 2 * s ** -2).               % Newton = kg·m²/s²
+si_unit_def('Pa', kg * m ** -1 * s ** -2).             % Pascal = N/m²
+si_unit_def('J', 'N' * m).                             % Joule = N·m
+si_unit_def('W', 'J' * s ** -1).                       % Watt = J/s
+si_unit_def('C', s * 'A').                             % Coulomb = s·A
+si_unit_def('V', m ** 2 * kg * s ** -3 * 'A' ** -1).   % Volt = W/A
+si_unit_def('Ohm', m ** 2 * kg * s ** -3 * 'A' ** -2). % Ohm = V/A
+si_unit_def('F', 'C' * 'V' ** -1).                     % Farad = C/V
+si_unit_def('T', kg * s ** -2 * 'A' ** -1).            % Tesla = Wb/m²
+si_unit_def('Wb', m ** 2 * kg * s ** -1 * 'A' ** -1).  % Weber = V·s
+si_unit_def('S', 'A' * 'V' ** -1).                     % Siemens = A/V
+si_unit_def('H', 'Wb' * 'A' ** -1).                    % Henry = Wb/A
+si_unit_def('lx', cd * m ** -2).                       % Lux = cd/m²
