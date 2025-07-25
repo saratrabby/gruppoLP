@@ -97,6 +97,26 @@ si_unit_name(S, Prefisso-NomeUnita) :-
     si_unit_symbol(NomeUnita, SimboloUnita),
     atom_concat(SimboloPrefisso, SimboloUnita, S).
 
+% Genera la lista di simboli con tutti i prefissi per una unità base
+all_prefixed_symbols(UnitaBase, ListaSimboli) :-
+    findall(Simbolo,
+        (si_prefix(_, SimboloPrefisso, _),
+         atom_concat(SimboloPrefisso, UnitaBase, Simbolo)),
+        ListaSimboli).
+
+% Genera la lista di nomi Prolog con tutti i prefissi per una unità
+all_prefixed_names(UnitaBase, ListaNomi) :-
+    findall(Prefisso-UnitaBase,
+        si_prefix(Prefisso, _, _),
+        ListaNomi).
+
+% Trova tutte le unità SI (base e derivate) presenti in una stringa (simbolo)
+find_units_in_string(Str, ListaUnita) :-
+    findall(Unita,
+        (si_unit_symbol(Unita, Simbolo),
+         sub_atom(Str, _, _, _, Simbolo)),
+        ListaUnita).
+
 % Result è < se U1 < U2, > se U1 > U2, = se U1 = U2 (in termini di grandezza)
 compare_units(Result, U1, U2) :-
     unit_factor(U1, F1, Base1),
@@ -172,6 +192,20 @@ list_to_dim([(U, 1)|T], U * D) :-
 list_to_dim([(U, E)|T], U ** E * D) :-
     list_to_dim(T, D).
 
+% Normalizza una dimensione: somma esponenti, 
+% elimina esponenti nulli, associa a sinistra
+norm(Dim, NewDim) :-
+    dim_to_list(Dim, List),         
+    merge_units(List, Merged),      
+    exclude_zero_exponents(Merged, Cleaned), 
+    list_to_dim(Cleaned, NewDim).   
+
+% Elimina unità con esponente zero
+exclude_zero_exponents([], []).
+exclude_zero_exponents([(U, E)|T], R) :-
+    (E =:= 0 -> exclude_zero_exponents(T, R)
+    ; R = [(U, E)|Rest], exclude_zero_exponents(T, Rest)
+    ).
 
 % Somma tra quantità (solo se dimensioni compatibili)
 qadd(q(V1, D1), q(V2, D2), q(V3, D1)) :-
