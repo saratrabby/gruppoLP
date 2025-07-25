@@ -174,6 +174,12 @@ si_unit_base_expansion(U, Exp) :-
 % Dimensione valida
 is_dimension(Dim) :-
     is_si_unit(Dim).
+is_dimension(Dim1 * Dim2) :-
+    is_dimension(Dim1),
+    is_dimension(Dim2).
+is_dimension(Dim ** E) :-
+    is_dimension(Dim),
+    integer(E).
 
 % Quantità valida
 is_quantity(q(Value, Dim)) :-
@@ -289,6 +295,14 @@ exclude_zero_exponents([(U, E)|T], R) :-
     ; R = [(U, E)|Rest], exclude_zero_exponents(T, Rest)
     ).
 
+% Costruttore di quantità: normalizza la dimensione
+make_quantity(Value, Dim, q(Value, NormDim)) :-
+    norm(Dim, NormDim).
+
+% Costruttore di quantità normalizzata
+q(N, D, q(N, ND)) :-
+    norm(D, ND).
+
 extract_factor(Dim, F) :-
     dim_to_list(Dim, List),
     extract_factor_list(List, F).
@@ -298,21 +312,32 @@ extract_factor_list([(_, _, F1)|T], F) :-
     extract_factor_list(T, FRest),
     F is F1 * FRest.
 
+% Validatore quantità
+is_quantity(q(Value, Dim)) :-
+    number(Value),
+    is_dimension(Dim).
+
 % Somma tra quantità (solo se dimensioni compatibili)
-qadd(q(V1, D1), q(V2, D2), q(V3, Dbase)) :-
+qadd(q(V1, D1), q(V2, D2), Q3) :-
+    is_quantity(q(V1, D1)),
+    is_quantity(q(V2, D2)),
     norm(D1, ND1),
     norm(D2, ND2),
-    ND1 = ND2, % dimensioni compatibili
+    ND1 = ND2,
     extract_factor(D1, F1),
     extract_factor(D2, F2),
     extract_factor(ND1, Fbase),
     V1base is V1 * F1 / Fbase,
     V2base is V2 * F2 / Fbase,
     V3 is V1base + V2base,
-    Dbase = ND1.
+    q(V3, ND1, Q3).
 
 % Sottrazione tra quantità
-qsub(q(V1, D1), q(V2, D2), q(V3, Dbase)) :-
+qsub(Q1, Q2, Q3) :-
+    is_quantity(Q1),
+    is_quantity(Q2),
+    Q1 = q(V1, D1),
+    Q2 = q(V2, D2),
     norm(D1, ND1),
     norm(D2, ND2),
     ND1 = ND2,
@@ -322,26 +347,36 @@ qsub(q(V1, D1), q(V2, D2), q(V3, Dbase)) :-
     V1base is V1 * F1 / Fbase,
     V2base is V2 * F2 / Fbase,
     V3 is V1base - V2base,
-    Dbase = ND1.
+    q(V3, ND1, Q3).
 
 % Moltiplicazione tra quantità
-qmul(q(V1, D1), q(V2, D2), q(V3, D3)) :-
+qmul(Q1, Q2, Q3) :-
+    is_quantity(Q1),
+    is_quantity(Q2),
+    Q1 = q(V1, D1),
+    Q2 = q(V2, D2),
     V3 is V1 * V2,
     Dtemp = D1 * D2,
-    norm(Dtemp, D3).
+    q(V3, Dtemp, Q3).
 
 % Divisione tra quantità
-qdiv(q(V1, D1), q(V2, D2), q(V3, D3)) :-
+qdiv(Q1, Q2, Q3) :-
+    is_quantity(Q1),
+    is_quantity(Q2),
+    Q1 = q(V1, D1),
+    Q2 = q(V2, D2),
     V3 is V1 / V2,
     Dtemp = D1 * (D2 ** -1),
-    norm(Dtemp, D3).
+    q(V3, Dtemp, Q3).
 
 % Elevamento a potenza intera
-qexp(q(V, D), N, q(VR, DR)) :-
+qexp(Q, N, Qres) :-
+    is_quantity(Q),
+    Q = q(V, D),
     integer(N),
     VR is V ** N,
     expand_power(D, N, Dexp),
-    norm(Dexp, DR).
+    q(VR, Dexp, Qres).
 
 % Espansione di potenza su espressioni
 expand_power(Prefisso-U, N, Exp) :-
@@ -370,3 +405,4 @@ same_dim(D1, D2) :-
     norm(D1, ND1),
     norm(D2, ND2),
     ND1 = ND2.
+
