@@ -4,18 +4,17 @@
 %%%% 909567 Caronni Andrea
     
 % Unità base SI
-is_base_si_unit(m).     % metro
-is_base_si_unit(kg).    % chilogrammo
-is_base_si_unit(s).     % secondo
-is_base_si_unit('A').   % ampere
-is_base_si_unit('K').   % kelvin
-is_base_si_unit(mol).   % mole
-is_base_si_unit(cd).    % candela
-
+si_base_unit(m).     % metro
+si_base_unit(kg).    % chilogrammo
+si_base_unit(s).     % secondo
+si_base_unit('A').   % ampere
+si_base_unit('K').   % kelvin
+si_base_unit(mol).   % mole
+si_base_unit(cd).    % candela
 
 % Riconoscimento unità SI (base o derivate)
 is_si_unit(U) :-
-    is_base_si_unit(U).
+    si_base_unit(U).
 is_si_unit(U) :-
     si_derived_unit(U, _).
 is_si_unit(U1 * U2) :-
