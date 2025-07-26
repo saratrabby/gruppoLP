@@ -373,9 +373,12 @@ qdiv(Q1, Q2, Q3) :-
     is_quantity(Q2),
     Q1 = q(V1, D1),
     Q2 = q(V2, D2),
-    V3 is V1 / V2,
-    Dtemp = D1 * (D2 ** -1),
-    q(V3, Dtemp, Q3).
+    Q2 = q(V2, _), % per chiarezza
+    (V2 =:= 0 -> throw(error('Divisione per zero', qdiv/3))
+    ; V3 is V1 / V2,
+      Dtemp = D1 * (D2 ** -1),
+      q(V3, Dtemp, Q3)
+    ).
 
 % Elevamento a potenza intera
 qexp(Q, N, Qres) :-
