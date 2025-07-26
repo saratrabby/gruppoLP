@@ -4,17 +4,17 @@
 %%%% 909567 Caronni Andrea
     
 % Unità base SI
-si_base_unit(m).     % metro
-si_base_unit(kg).    % chilogrammo
-si_base_unit(s).     % secondo
-si_base_unit('A').   % ampere
-si_base_unit('K').   % kelvin
-si_base_unit(mol).   % mole
-si_base_unit(cd).    % candela
+is_base_si_unit(m).     % metro
+is_base_si_unit(kg).    % chilogrammo
+is_base_si_unit(s).     % secondo
+is_base_si_unit('A').   % ampere
+is_base_si_unit('K').   % kelvin
+is_base_si_unit(mol).   % mole
+is_base_si_unit(cd).    % candela
 
 % Riconoscimento unità SI (base o derivate)
 is_si_unit(U) :-
-    si_base_unit(U).
+    is_base_si_unit(U).
 is_si_unit(U) :-
     si_derived_unit(U, _).
 is_si_unit(U1 * U2) :-
@@ -164,7 +164,7 @@ unit_factor(U, F, Base) :-
 %accetta anche unita' derivate con prefisso.
 si_unit_base_expansion(U, Exp) :-
     % Caso unità base SI
-    si_base_unit(U), !,
+    is_base_si_unit(U), !,
     Exp = U.
 si_unit_base_expansion(U, Exp) :-
     % Caso unità derivata SI
@@ -240,7 +240,7 @@ dim_to_list(U ** E, [(Base, E, Fattmul)]) :-
     !.
 dim_to_list(U ** E, [(U, E, 1)]) :- is_si_unit(U),!.
 dim_to_list(U, [(U, 1, 1)]) :-
-    si_base_unit(U), !.
+    is_base_si_unit(U), !.
 dim_to_list(U, [(U, 1, 1)]) :-
     si_derived_unit(U, _),!.
 
@@ -281,7 +281,7 @@ expt_base_unit(U, E, Base, FattoreTotale) :-
     decompose_prefixed_unit(U, _, Base, Fattore),
     FattoreTotale is Fattore ** E.
 expt_base_unit(U, E, U, 1) :-
-    si_base_unit(U).
+    is_base_si_unit(U).
 
 % sum_base_units(ListaUnità, ListaSemplificata)
 sum_base_units(List, Result) :-
