@@ -1,19 +1,21 @@
+%%%% -*- Mode: Prolog -*-
 %%%% 899988 Alari Matteo
 %%%% 914295 Trabattoni Sara
-
+%%%% 909567 Caronni Andrea
+    
 % Unità base SI
-si_base_unit(m).     % metro
-si_base_unit(kg).    % chilogrammo
-si_base_unit(s).     % secondo
-si_base_unit('A').   % ampere
-si_base_unit('K').   % kelvin
-si_base_unit(mol).   % mole
-si_base_unit(cd).    % candela
+is_base_si_unit(m).     % metro
+is_base_si_unit(kg).    % chilogrammo
+is_base_si_unit(s).     % secondo
+is_base_si_unit('A').   % ampere
+is_base_si_unit('K').   % kelvin
+is_base_si_unit(mol).   % mole
+is_base_si_unit(cd).    % candela
 
 
 % Riconoscimento unità SI (base o derivate)
 is_si_unit(U) :-
-    si_base_unit(U).
+    is_base_si_unit(U).
 is_si_unit(U) :-
     si_derived_unit(U, _).
 is_si_unit(U1 * U2) :-
@@ -24,25 +26,26 @@ is_si_unit(U ** E) :-
     integer(E).
 
 % Unità derivate SI: si_derived_unit(Simbolo, Espressione)
-si_derived_unit(N, kg * m / s ** 2).         % Newton
-si_derived_unit(J, kg * m ** 2 / s ** 2).    % Joule
-si_derived_unit(Pa, kg / (m * s ** 2)).      % Pascal
-si_derived_unit(W, kg * m ** 2 / s ** 3).    % Watt
-si_derived_unit(Hz, 1 / s).                  % Hertz
-si_derived_unit(C, s * 'A').                 % Coulomb
-si_derived_unit(V, kg * m ** 2 / (s ** 3 * 'A')). % Volt
-si_derived_unit(F, s ** 4 * 'A' ** 2 / (kg * m ** 2)). % Farad
-si_derived_unit(Ohm, kg * m ** 2 / (s ** 3 * 'A' ** 2)). % Ohm
-si_derived_unit(S, s ** 3 * 'A' ** 2 / (kg * m ** 2)). % Siemens
-si_derived_unit(Wb, kg * m ** 2 / (s ** 2 * 'A')). % Weber
-si_derived_unit(T, kg / (s ** 2 * 'A')).     % Tesla
-si_derived_unit(H, kg * m ** 2 / (s ** 2 * 'A' ** 2)). % Henry
+si_derived_unit('N', kg * m / s ** 2).         % Newton
+si_derived_unit('J', kg * m ** 2 / s ** 2).    % Joule
+si_derived_unit('Pa', kg / (m * s ** 2)).      % Pascal
+si_derived_unit('W', kg * m ** 2 / s ** 3).    % Watt
+si_derived_unit('Hz', 1 / s).                  % Hertz
+si_derived_unit('C', s * 'A').                 % Coulomb
+si_derived_unit('V', kg * m ** 2 / (s ** 3 * 'A')). % Volt
+si_derived_unit('F', s ** 4 * 'A' ** 2 / (kg * m ** 2)). % Farad
+si_derived_unit('omega', kg * m ** 2 / (s ** 3 * 'A' ** 2)). % Ohm
+si_derived_unit('S', s ** 3 * 'A' ** 2 / (kg * m ** 2)). % Siemens
+si_derived_unit('Wb', kg * m ** 2 / (s ** 2 * 'A')). % Weber
+si_derived_unit('T', kg / (s ** 2 * 'A')).     % Tesla
+si_derived_unit('H', kg * m ** 2 / (s ** 2 * 'A' ** 2)). % Henry
 si_derived_unit(lm, cd).                     % Lumen (semplificato)
 si_derived_unit(lx, cd / m ** 2).            % Lux (semplificato)
-si_derived_unit(Bq, 1 / s).                  % Becquerel
-si_derived_unit(Gy, m ** 2 / s ** 2).        % Gray
-si_derived_unit(Sv, m ** 2 / s ** 2).        % Sievert
-si_derived_unit(kat, mol / s).               % Katal 
+si_derived_unit('Bq', 1 / s).                  % Becquerel
+si_derived_unit('Gy', m ** 2 / s ** 2).        % Gray
+si_derived_unit('Sv', m ** 2 / s ** 2).        % Sievert
+si_derived_unit(kat, mol / s).               % Katal
+si_derived_unit('DC', 'K').
 
 % Unità non SI ma usata per i multipli
 grammo_base(kg).
