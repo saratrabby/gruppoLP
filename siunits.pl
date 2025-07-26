@@ -173,9 +173,21 @@ si_unit_base_expansion(U, Exp) :-
     si_unit_base_expansion(NomeUnita, BaseExp),
     Exp = BaseExp * Fattore.
 
-% Dimensione valida
+check_prefixed_unit(Simbolo, BaseUnita) :-
+    decompose_prefixed_unit(Simbolo, _, BaseUnita, _).
+
+% Dimensione valida: unità base o derivata SI
 is_dimension(Dim) :-
-    is_si_unit(Dim).
+    is_si_unit(Dim).  
+
+% Dimensione valida: con prefisso 
+is_dimension(Prefisso-Unita) :-
+    si_prefix(Prefisso, _, _),
+    is_si_unit(Unita).
+is_dimension(Simbolo) :-
+    atom(Simbolo),
+    check_prefixed_unit(Simbolo, BaseUnita),
+    is_si_unit(BaseUnita).
 is_dimension(Dim1 * Dim2) :-
     is_dimension(Dim1),
     is_dimension(Dim2).
