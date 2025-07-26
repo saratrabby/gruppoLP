@@ -178,10 +178,10 @@ check_prefixed_unit(Simbolo, BaseUnita) :-
 
 % Dimensione valida: unità base o derivata SI
 is_dimension(Dim) :-
-    is_si_unit(Dim).  
-is_dimension(Prefisso-Unita) :-
-    si_prefix(_, Prefisso, _),
-    is_si_unit(Unita).
+    is_si_unit(Dim).
+%is_dimension(Prefisso-Unita) :-
+%    si_prefix(_, Prefisso, _),
+%    is_si_unit(Unita).
 is_dimension(Simbolo) :-
     atom(Simbolo),
     check_prefixed_unit(Simbolo, BaseUnita),
@@ -242,11 +242,19 @@ merge_units_([(U, E, F)|T], Acc, Result) :-
     ).
 
 % decompose_prefixed_unit(Simbolo, Prefisso, BaseUnita, Fattore)
+%dato Simbolo, restituisce Prefisso, BaseUnita, Fattore
+%es. (cm, X, Y, Z) X = c Y = m, Z = 1e-2
 decompose_prefixed_unit(Simbolo, Prefisso, BaseUnita, Fattore) :-
     atom(Simbolo),
-    si_prefix(Prefisso, SimboloPrefisso, Fattore),
-    si_unit_symbol(BaseUnita, BaseSimbolo),
-    atom_concat(SimboloPrefisso, BaseSimbolo, Simbolo).
+    si_prefix(_, Prefisso, Fattore),
+    atom_length(Prefisso, PrefLung),
+    sub_atom(Simbolo, 0, Preflung, _, Prefisso),
+    sub_atom(Simbolo, Preflung, _, _, BaseUnita),
+    is_si_unit(BaseUnita).
+%    si_prefix(Prefisso, SimboloPrefisso, Fattore),
+%    si_unit_symbol(BaseUnita, BaseSimbolo),
+%    atom_concat(SimboloPrefisso, BaseSimbolo, Simbolo).
+
 % check_prefixed_unit(Simbolo, BaseUnita)
 check_prefixed_unit(Simbolo, BaseUnita) :-
     decompose_prefixed_unit(Simbolo, _, BaseUnita, _).
