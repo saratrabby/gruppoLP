@@ -179,10 +179,8 @@ check_prefixed_unit(Simbolo, BaseUnita) :-
 % Dimensione valida: unità base o derivata SI
 is_dimension(Dim) :-
     is_si_unit(Dim).  
-
-% Dimensione valida: con prefisso 
 is_dimension(Prefisso-Unita) :-
-    si_prefix(Prefisso, _, _),
+    si_prefix(_, Prefisso, _),
     is_si_unit(Unita).
 is_dimension(Simbolo) :-
     atom(Simbolo),
