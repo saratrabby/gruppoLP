@@ -295,14 +295,6 @@ exclude_zero_exponents([(U, E)|T], R) :-
     ; R = [(U, E)|Rest], exclude_zero_exponents(T, Rest)
     ).
 
-% Costruttore di quantità: normalizza la dimensione
-make_quantity(Value, Dim, q(Value, NormDim)) :-
-    norm(Dim, NormDim).
-
-% Costruttore di quantità normalizzata
-q(N, D, q(N, ND)) :-
-    norm(D, ND).
-
 extract_factor(Dim, F) :-
     dim_to_list(Dim, List),
     extract_factor_list(List, F).
@@ -311,6 +303,20 @@ extract_factor_list([], 1).
 extract_factor_list([(_, _, F1)|T], F) :-
     extract_factor_list(T, FRest),
     F is F1 * FRest.
+
+% Costruttore di quantità: normalizza la dimensione e converte il valore
+make_quantity(Value, Dim, q(ValueNorm, NormDim)) :-
+    norm(Dim, NormDim),
+    extract_factor(Dim, F),
+    extract_factor(NormDim, Fbase),
+    ValueNorm is Value * F / Fbase.
+
+% Costruttore di quantità normalizzata
+q(N, D, q(NormN, ND)) :-
+    norm(D, ND),
+    extract_factor(D, F),
+    extract_factor(ND, Fbase),
+    NormN is N * F / Fbase.
 
 % Validatore quantità
 is_quantity(q(Value, Dim)) :-
