@@ -1,9 +1,8 @@
-%%%% -*- Mode: Prolog -*-
 %%%% 899988 Alari Matteo
 %%%% 914295 Trabattoni Sara
 %%%% 909567 Caronni Andrea
     
-% Unità base SI
+% UnitÃ  base SI
 is_base_si_unit(m).     % metro
 is_base_si_unit(kg).    % chilogrammo
 is_base_si_unit(s).     % secondo
@@ -12,7 +11,7 @@ is_base_si_unit('K').   % kelvin
 is_base_si_unit(mol).   % mole
 is_base_si_unit(cd).    % candela
 
-% Riconoscimento unità SI (base o derivate). Riconosce anche unita' con
+% Riconoscimento unitÃ  SI (base o derivate). Riconosce anche unita' con
 %esponenziale e prodotti di unita'/esponenziali. NON accetta prefissi.
 is_si_unit(U) :-
     is_base_si_unit(U).
@@ -25,7 +24,7 @@ is_si_unit(U ** E) :-
     is_si_unit(U),
     integer(E).
 
-% Unità derivate SI: si_derived_unit(Simbolo, Espressione)
+% UnitÃ  derivate SI: si_derived_unit(Simbolo, Espressione)
 si_derived_unit('N', kg * m / s ** 2).         % Newton
 si_derived_unit('J', kg * m ** 2 / s ** 2).    % Joule
 si_derived_unit('Pa', kg / (m * s ** 2)).      % Pascal
@@ -49,7 +48,7 @@ si_derived_unit('DC', 'K').
 si_derived_unit(rad, * ).
 si_derived_unit(sr, * ).
 
-% Unità non SI ma usata per i multipli
+% UnitÃ  non SI ma usata per i multipli
 grammo_base(kg).
 
 % Prefissi SI (nome, simbolo, fattore)
@@ -59,11 +58,11 @@ si_prefix(deca, da, 1e1).
 si_prefix(deci, d, 1e-1).
 si_prefix(centi, c, 1e-2).
 si_prefix(milli, m, 1e-3).
-si_prefix(micro, 'μ', 1e-6).
+si_prefix(micro, 'Î¼', 1e-6).
 si_prefix(nano, n, 1e-9).
 si_prefix(pico, p, 1e-12).
 
-% Unità base SI
+% UnitÃ  base SI
 si_unit_symbol(metro, m).
 si_unit_symbol(chilo-grammo, kg).
 si_unit_symbol(secondo, s).
@@ -95,7 +94,7 @@ si_unit_symbol('Volt', 'V').
 si_unit_symbol('Watt', 'W').
 si_unit_symbol('Weber', 'Wb').
 
-% Unità con prefisso: si_unit_symbol(NomeUnità, Simbolo)
+% UnitÃ  con prefisso: si_unit_symbol(NomeUnitÃ , Simbolo)
 si_unit_symbol(NomePrefisso-Unita, SimboloPrefissoSimboloUnita) :-
     atom(NomePrefisso),
     atom(Unita),
@@ -112,26 +111,26 @@ si_unit_name(S, Prefisso-NomeUnita) :-
     atom_concat(SimboloPrefisso, SimboloUnita, S).
 
 
-% Result è < se U1 < U2, > se U1 > U2, = se U1 = U2 (in termini di grandezza)
+% Result Ã¨ < se U1 < U2, > se U1 > U2, = se U1 = U2 (in termini di grandezza)
 %puo' prendere come parametri sia i simboli sia i nomi delle unita'
 %es. cm o centi-metro. NON puo' prendere come parametri, invece, le potenze
 %di unita' (le relazioni d'ordine rimangono uguali es.cm < m e cm ** 2 <m ** 2)
 compare_units(Result, U1, U2) :-
     unit_factor(U1, F1, Base1),
     unit_factor(U2, F2, Base2),
-    Base1 = Base2, % devono essere la stessa unità base
+    Base1 = Base2, % devono essere la stessa unitÃ  base
     ( F1 < F2 -> Result = '<'
     ; F1 > F2 -> Result = '>'
     ; F1 =:= F2 -> Result = '='
     ).
 
 % Calcola il fattore numerico per determinare l'ordine nel predicato
-% compare_units associato all'unità (considerando il prefisso)
+% compare_units associato all'unitÃ  (considerando il prefisso)
 %puo' prendere come parametri sia i simboli sia i nomi delle unita'
 %es. cm o centi-metro. NON puo' prendere come parametri, invece, le potenze
 %di unita'.
 unit_factor(U, 1, U) :-
-    si_unit_symbol(_, U). % unità senza prefisso
+    si_unit_symbol(_, U). % unitÃ  senza prefisso
 unit_factor(Prefisso-Nome, Fattore, Base) :-
     si_prefix(Prefisso, _, F),
     si_unit_symbol(Nome, Base),
@@ -149,11 +148,11 @@ unit_factor(U, F, Base) :-
 % Espansione canonica in unita' base di unita' derivate.
 %accetta anche unita' derivate con prefisso.
 si_unit_base_expansion(U, Exp) :-
-    % Caso unità base SI
+    % Caso unitÃ  base SI
     is_base_si_unit(U), !,
     Exp = U.
 si_unit_base_expansion(U, Exp) :-
-    % Caso unità derivata SI
+    % Caso unitÃ  derivata SI
     si_derived_unit(U, Exp), !.
 
 si_unit_base_expansion(U, Exp) :-
@@ -170,7 +169,7 @@ si_unit_base_expansion(U, Exp) :-
 check_prefixed_unit(Simbolo, BaseUnita) :-
     decompose_prefixed_unit(Simbolo, _, BaseUnita, _).
 
-% Dimensione valida: unità base o derivata SI
+% Dimensione valida: unitÃ  base o derivata SI
 is_dimension(Dim) :-
     is_si_unit(Dim).
 is_dimension(Simbolo) :-
@@ -184,12 +183,12 @@ is_dimension(Dim ** E) :-
     is_dimension(Dim),
     integer(E).
 
-% Quantità valida
+% QuantitÃ  valida
 is_quantity(q(Value, Dim)) :-
     number(Value),
     is_dimension(Dim).
 
-% Conversione dimensione in lista [(unità, esponente)]
+% Conversione dimensione in lista [(unitÃ , esponente)]
 %il secondo argomento sara'una lista di terms (unita esponente fattore),
 %dove fattore e' il valore per cui moltiplicare l'unita' senza prefisso
 %per arrivare alla unita' con prefisso es. cm -> 0.01. Tiene conto di esponenti
@@ -216,7 +215,7 @@ dim_to_list(U, [(U, 1, 1)]) :-
 dim_to_list(U, [(U, 1, 1)]) :-
     si_derived_unit(U, _),!.
 
-% Somma esponenti per unità duplicate
+% Somma esponenti per unitÃ  duplicate
 %somma esponenti (e fattori) che hanno unita'(senza prefisso) uguale.
 %es. (m 1 1) e (m 1 1) diventa (m 2 1).
 merge_units(Units, Merged) :-
@@ -387,9 +386,9 @@ extract_factor_list([(_, _, F1)|T], F) :-
     extract_factor_list(T, FRest),
     F is F1 * FRest.
 
-%TUTTI I PREDICATI SOTTOSTANTI CHE FANNO RIFERIMENTO A QUANTIT� intendono
+%TUTTI I PREDICATI SOTTOSTANTI CHE FANNO RIFERIMENTO A QUANTITÁ intendono
 %quantita' secondo il formato q(numero dimensione).
-% Somma tra quantità (solo se dimensioni compatibili)
+% Somma tra quantitÃ  (solo se dimensioni compatibili)
 
 qadd(Q1, Q2, q(V3, NND1)) :-
     is_quantity(Q1),
@@ -406,7 +405,7 @@ qadd(Q1, Q2, q(V3, NND1)) :-
     V3 is V1base + V2base.
 
 
-% Sottrazione tra quantità (solo se dimensioni compatibili)
+% Sottrazione tra quantitÃ  (solo se dimensioni compatibili)
 qsub(Q1, Q2, q(V3, NND1)) :-
     is_quantity(Q1),
     is_quantity(Q2),
@@ -421,7 +420,7 @@ qsub(Q1, Q2, q(V3, NND1)) :-
     V2base is V2 * F2,
     V3 is V1base - V2base.
 
-% Moltiplicazione tra quantità
+% Moltiplicazione tra quantitÃ 
 qmul(Q1, Q2, q(V3, ND1)) :-
     is_quantity(Q1),
     is_quantity(Q2),
@@ -440,7 +439,7 @@ qmul(Q1, Q2, q(V3, ND1)) :-
     list_to_dim(Factorless, ND1).
     
 
-% Divisione tra quantità
+% Divisione tra quantitÃ 
 qdiv(Q1, Q2, q(V3, ND1)) :-
     is_quantity(Q1),
     is_quantity(Q2),
